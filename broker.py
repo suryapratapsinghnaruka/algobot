@@ -59,7 +59,13 @@ class AngelOneBroker:
             self._load_instrument_map()
             log.info(f"Angel One session started for {client_id}")
         except ImportError:
-            raise ImportError("Run: pip install smartapi-python pyotp")
+            log.warning(
+                "smartapi-python not installed — Angel One unavailable. "
+                "Stock trading will use paper mode. "
+                "On Railway: this is expected, stocks run as paper only."
+            )
+            self._session   = None
+            self._available = False
         except Exception as e:
             from datetime import timezone, timedelta as td
             IST     = timezone(td(hours=5, minutes=30))
