@@ -101,17 +101,6 @@ class WatchlistRanker:
         """Fetch candles + run strategies for one symbol. Returns scored candidates."""
         try:
             import time, random
-
-            # ── Pre-filter: skip blacklisted and invalid CoinDCX symbols ─────
-            # Do this BEFORE fetching candles to avoid wasting the top-N slots
-            if market == "crypto":
-                blacklist = self.cfg.get("COINDCX_BLACKLIST", set())
-                if symbol in blacklist:
-                    return []
-                # Check CoinDCX valid markets cache if available
-                if hasattr(broker, "_is_valid_market") and not broker._is_valid_market(symbol):
-                    return []
-
             time.sleep(random.uniform(0.05, 0.2))   # gentle rate limiting
 
             candles = broker.get_candles(
