@@ -109,7 +109,7 @@ class AlgoBot:
                 market_order_syms = {
                     item["symbol"] for item in data
                     if isinstance(item, dict)
-                    and item.get("target_currency_short_name") == "USDT"
+                    and item.get("base_currency_short_name") == "USDT"
                     and item.get("status") == "active"
                     and "market_order" in item.get("order_types", [])
                 }
