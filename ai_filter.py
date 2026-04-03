@@ -1,5 +1,5 @@
 """
-AI Filter - Claude-powered trade intelligence layer
+AI Filter - Claude-powered trade intelligence layer 
 ====================================================
 Three capabilities:
 
