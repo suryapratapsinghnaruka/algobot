@@ -129,15 +129,26 @@ CONFIG = {
     # ── COINDCX PAIR BLACKLIST ────────────────────────────────────────────────
     # Pairs that consistently get rejected (not listed, lot-size issues, etc.)
     # The bot will auto-add pairs at runtime too — add here to make permanent.
+    # All coins confirmed to reject market orders on CoinDCX — permanent blacklist
     "COINDCX_BLACKLIST": {
-        "VICUSDT",        # not listed on CoinDCX
-        "RVNUSDT",        # lot size too small for $15 capital
-        "BANANAS31USDT",  # lot size / precision issue
-        "GUNUSDT",        # lot size / precision issue
-        "MAGICUSDT",      # auto-blacklisted: Invalid request
-        "RSRUSDT",        # auto-blacklisted: Invalid request (micro-price)
-        "PEPEUSDT",       # auto-blacklisted: Invalid request (micro-price, 3.6M qty)
+        "FOGOUSDT","BIOUSDT","SKLUSDT","AEVOUSDT","IOTAUSDT",
+        "HEMIUSDT","DYDXUSDT","NKNUSDT","WCTUSDT","AUSDT",
+        "DYMUSDT","CELRUSDT","MAGICUSDT","RSRUSDT","JSTUSDT",
+        "TSTUSDT","ROSEUSDT","USTCUSDT","MANTRAUSDT","VICUSDT",
+        "GUNUSDT","BANANAS31USDT","C98USDT","WIFUSDT","1INCHUSDT",
+        "HIFIUSDT","BBUSDT","LUNAUSDT","RVNUSDT","PEPEUSDT",
+        "SHIBUSDT","FLOKIUSDT","BONKUSDT",
     },
+
+    # Only scan these verified coins — all confirmed to work on CoinDCX with market orders
+    "COINDCX_VERIFIED_ONLY": True,
+    "COINDCX_VERIFIED_SYMBOLS": [
+        "BTCUSDT","ETHUSDT","XRPUSDT","BNBUSDT","SOLUSDT",
+        "ADAUSDT","LTCUSDT","LINKUSDT","DOTUSDT","AVAXUSDT",
+        "MATICUSDT","UNIUSDT","ATOMUSDT","XLMUSDT","TRXUSDT",
+        "NEARUSDT","ALGOUSDT","SANDUSDT","APTUSDT","ARBUSDT",
+        "OPUSDT","INJUSDT","SUIUSDT","STXUSDT","RUNEUSDT",
+    ],
 
     # ── PRICE FLOOR ───────────────────────────────────────────────────────────
     # Skip coins below this USD price. At $15 capital, sub-cent coins need
@@ -149,7 +160,7 @@ CONFIG = {
     # Set ANTHROPIC_API_KEY in your environment variables.
     # NOTE: auto-disables itself when ANTHROPIC_API_KEY is missing/expired
     # so the bot keeps trading on algo signals alone.
-    "AI_FILTER_ENABLED":  bool(os.environ.get("ANTHROPIC_API_KEY", "")),
+    "AI_FILTER_ENABLED":  False,
     "AI_MIN_CONFIDENCE":  0.60,        # minimum Claude confidence to proceed
     "AI_MODEL":           "claude-haiku-4-5-20251001",  # fast + cheap
 
@@ -157,14 +168,14 @@ CONFIG = {
     # Fetches news headlines and scores them via Claude before trading.
     # Requires NEWS_API_KEY env var (free tier at newsapi.org).
     # Auto-disables when ANTHROPIC_API_KEY is missing.
-    "SENTIMENT_ENABLED":         bool(os.environ.get("ANTHROPIC_API_KEY", "")),
+    "SENTIMENT_ENABLED":         False,
     "SENTIMENT_VETO_THRESHOLD":  -0.5,   # veto trade if sentiment < -0.5 (bearish)
     "NEWS_API_KEY":              os.environ.get("NEWS_API_KEY", ""),
 
     # ── AI STRATEGY ADVISOR ───────────────────────────────────────────────────
     # Weekly analysis: feeds closed trades to Claude → generates new strategy ideas.
     # Auto-disables when ANTHROPIC_API_KEY is missing.
-    "AI_STRATEGY_ADVISOR_ENABLED": bool(os.environ.get("ANTHROPIC_API_KEY", "")),
+    "AI_STRATEGY_ADVISOR_ENABLED": False,
 
     # ── LIVE DASHBOARD ────────────────────────────────────────────────────────
     "DASHBOARD_ENABLED": True,
