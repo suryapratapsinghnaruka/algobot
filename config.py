@@ -112,11 +112,11 @@ CONFIG = {
     "ATR_TP_MULTIPLIER":  3.0,   # TP = entry ± 3.0 * ATR  (2:1 R:R)
 
     # ── SIGNAL QUALITY ───────────────────────────────────────────────────────
-    "MIN_SIGNAL_CONFIDENCE": 0.60,
+    "MIN_SIGNAL_CONFIDENCE": 0.65,
 
     # ── LIQUIDITY FILTER ─────────────────────────────────────────────────────
     "MIN_AVG_VOLUME_STOCKS": 500000,  # Higher filter — only liquid stocks affordable at ₹1500
-    "MIN_AVG_VOLUME_CRYPTO": 50000,   # lowered — CoinDCX coins have less volume than Binance
+    "MIN_AVG_VOLUME_CRYPTO": 100000,
 
     # ── PARALLEL PROCESSING ──────────────────────────────────────────────────
     "THREAD_WORKERS": 5,
@@ -149,12 +149,9 @@ CONFIG = {
     # Set ANTHROPIC_API_KEY in your environment variables.
     # NOTE: auto-disables itself when ANTHROPIC_API_KEY is missing/expired
     # so the bot keeps trading on algo signals alone.
-    # AI filter disabled — algo signals with 3+ strategies and 85%+ confidence
-    # are already high quality. Claude was vetoing 100% of trades due to ATR=0
-    # at low-volume hours. Re-enable once you have $100+ capital and want extra safety.
-    "AI_FILTER_ENABLED":  False,
-    "AI_MIN_CONFIDENCE":  0.60,
-    "AI_MODEL":           "claude-haiku-4-5-20251001",
+    "AI_FILTER_ENABLED":  bool(os.environ.get("ANTHROPIC_API_KEY", "")),
+    "AI_MIN_CONFIDENCE":  0.60,        # minimum Claude confidence to proceed
+    "AI_MODEL":           "claude-haiku-4-5-20251001",  # fast + cheap
 
     # ── SENTIMENT ANALYSIS ────────────────────────────────────────────────────
     # Fetches news headlines and scores them via Claude before trading.
