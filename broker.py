@@ -262,7 +262,7 @@ class CoinDCXBroker:
             }
             CoinDCXBroker._markets_cache["data"] = valid
             CoinDCXBroker._markets_cache["ts"]   = t.time()
-            log.info(f"CoinDCX: loaded {len(valid)} valid INR spot markets.")
+            log.info(f"CoinDCX: loaded {len(valid)} valid USDT spot markets.")
         except Exception as e:
             log.warning(f"CoinDCX: could not load markets list: {e}")
             CoinDCXBroker._markets_cache["data"] = set()
