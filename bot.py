@@ -93,10 +93,47 @@ class AlgoBot:
         log.info("=" * 65)
 
         log.info("Fetching full symbol lists from exchanges...")
-        CONFIG["STOCK_SYMBOLS"]  = get_all_nse_symbols()
-        CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
-        log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
-                 f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs")
+        CONFIG["STOCK_SYMBOLS"] = get_all_nse_symbols()
+
+        # For CoinDCX live trading: fetch only coins that support market orders
+        crypto_broker_name = CONFIG.get("CRYPTO_BROKER", "paper").lower()
+        is_live = not CONFIG.get("PAPER_TRADING", True)
+        if crypto_broker_name == "coindcx" and is_live:
+            try:
+                import requests as _req
+                # markets_details has order_types field — only include market_order coins
+                r    = _req.get("https://api.coindcx.com/exchange/v1/markets_details", timeout=15)
+                data = r.json()
+                if not isinstance(data, list) or len(data) == 0:
+                    raise ValueError(f"Unexpected format: {str(data)[:80]}")
+                market_order_syms = {
+                    item["symbol"] for item in data
+                    if isinstance(item, dict)
+                    and item.get("symbol", "").endswith("USDT")
+                    and item.get("status") == "active"
+                    and "market_order" in item.get("order_types", [])
+                }
+                # Filter by min price using ticker
+                ticker_r = _req.get("https://api.coindcx.com/exchange/ticker", timeout=15)
+                ticker   = {x["market"]: float(x.get("last_price", 0))
+                            for x in ticker_r.json() if isinstance(x, dict)}
+                blacklist = CONFIG.get("COINDCX_BLACKLIST", set())
+                min_price = CONFIG.get("MIN_COIN_PRICE_USD", 0.005)
+                CONFIG["CRYPTO_SYMBOLS"] = sorted([
+                    s for s in market_order_syms
+                    if s not in blacklist and ticker.get(s, 0) >= min_price
+                ])
+                log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
+                         f"{len(CONFIG['CRYPTO_SYMBOLS'])} CoinDCX pairs (market orders only)")
+            except Exception as e:
+                log.warning(f"CoinDCX market-order symbol fetch failed ({e}) — using Binance fallback")
+                CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
+                log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
+                         f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs (fallback)")
+        else:
+            CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
+            log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
+                     f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs")
 
         self.risk    = RiskManager(CONFIG)
         self.engine  = StrategyEngine(CONFIG)
