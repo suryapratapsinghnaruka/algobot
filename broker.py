@@ -59,13 +59,7 @@ class AngelOneBroker:
             self._load_instrument_map()
             log.info(f"Angel One session started for {client_id}")
         except ImportError:
-            log.warning(
-                "smartapi-python not installed — Angel One unavailable. "
-                "Stock trading will use paper mode. "
-                "On Railway: this is expected, stocks run as paper only."
-            )
-            self._session   = None
-            self._available = False
+            raise ImportError("Run: pip install smartapi-python pyotp")
         except Exception as e:
             from datetime import timezone, timedelta as td
             IST     = timezone(td(hours=5, minutes=30))
@@ -247,7 +241,12 @@ class CoinDCXBroker:
         log.info("CoinDCX broker connected.")
 
     def _load_valid_markets(self):
-        """Cache the list of valid CoinDCX USDT spot markets at startup."""
+        """Cache the list of valid CoinDCX INR spot markets at startup.
+        
+        NOTE: We use INR pairs (BTCINR, ETHINR etc) because the user's
+        funds are in the CoinDCX INR wallet. USDT pairs need a separate
+        USDT wallet which requires converting INR→USDT first.
+        """
         import requests, time as t
         try:
             r = requests.get(
@@ -258,12 +257,12 @@ class CoinDCXBroker:
                 item["symbol"]
                 for item in data
                 if item.get("status") == "active"
-                and item.get("base_currency_short_name") == "USDT"
+                and item.get("quote_currency_short_name") == "INR"
                 and "market_order" in item.get("order_types", [])
             }
             CoinDCXBroker._markets_cache["data"] = valid
             CoinDCXBroker._markets_cache["ts"]   = t.time()
-            log.info(f"CoinDCX: loaded {len(valid)} valid USDT spot markets.")
+            log.info(f"CoinDCX: loaded {len(valid)} valid INR spot markets.")
         except Exception as e:
             log.warning(f"CoinDCX: could not load markets list: {e}")
             CoinDCXBroker._markets_cache["data"] = set()
@@ -349,14 +348,8 @@ class CoinDCXBroker:
                 log.error(f"CoinDCX: cannot get USD price for {symbol} — order cancelled")
                 return None
 
-            # Sanity check: passed price should be within 50% of ticker price
-            if price > 0 and abs(price - usd_price) / usd_price > 0.5:
-                log.warning(
-                    f"CoinDCX: price mismatch for {symbol} — "
-                    f"passed={price:.6f} ticker={usd_price:.6f} "
-                    f"(candle was likely INR). Using ticker price."
-                )
-                price = usd_price
+            # Use ticker price directly (INR pairs — ticker returns INR price)
+            price = usd_price
 
             # ── SPOT SELL GUARD ───────────────────────────────────────────────
             # CoinDCX is a spot exchange. A SELL order means selling coins you OWN.
@@ -377,13 +370,13 @@ class CoinDCXBroker:
                 # If we do own enough, sell only what we have (close position)
                 qty = min(qty, owned_qty)
 
-            # ── Minimum order value check ─────────────────────────────────────
-            min_order_usd = 11.0
+            # ── Minimum order value check (₹100 minimum on CoinDCX) ──────────
+            min_order_inr = 100.0
             order_value   = qty * usd_price
-            if order_value < min_order_usd:
+            if order_value < min_order_inr:
                 log.warning(
-                    f"CoinDCX: order value ${order_value:.2f} is below minimum ${min_order_usd} "
-                    f"for {symbol} — order cancelled. Increase CAPITAL or MAX_POSITION_PCT."
+                    f"CoinDCX: order value ₹{order_value:.2f} is below minimum ₹{min_order_inr} "
+                    f"for {symbol} — order cancelled."
                 )
                 return None
 
@@ -399,7 +392,7 @@ class CoinDCXBroker:
 
             log.info(
                 f"CoinDCX placing order: {action} {qty_fmt} {symbol} "
-                f"@ ${usd_price:.6f} = ${qty_fmt * usd_price:.2f} USD"
+                f"@ ₹{usd_price:.4f} = ₹{qty_fmt * usd_price:.2f} INR"
             )
             resp = self._signed_request("/exchange/v1/orders/create", {
                 "market":        symbol,
@@ -453,13 +446,11 @@ class CoinDCXBroker:
 
     def _get_current_price(self, symbol):
         """
-        Get current price from CoinDCX ticker (USD prices).
-        NOTE: CoinDCX candle endpoint returns INR prices — do NOT use for USD comparison.
-        The ticker endpoint returns correct USD prices matching yfinance.
+        Get current INR price from CoinDCX ticker.
+        For INR pairs (BTCINR, ETHINR etc), prices are in INR directly.
         """
         try:
             import requests, time as t
-            # Cache ticker for 15 seconds to avoid hammering the API
             now = t.time()
             if (not CoinDCXBroker._ticker_cache["data"] or
                     now - CoinDCXBroker._ticker_cache["ts"] > 15):
