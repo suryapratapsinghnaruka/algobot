@@ -74,9 +74,9 @@ CONFIG = {
     "PAPER_TRADING": False,
 
     # ── CAPITAL ──────────────────────────────────────────────────────────────
-    # CAPITAL is in INR for both stocks and CoinDCX INR pairs.
-    # CoinDCX INR wallet has ₹1500 deposited.
-    "CAPITAL": 1500,            # INR — used for both NSE stocks and CoinDCX INR pairs
+    # CAPITAL: 15 USDT for crypto (you bought ₹1500 worth of USDT on CoinDCX)
+    # For NSE stocks, this is treated as INR when Angel One is connected.
+    "CAPITAL": 15,              # USDT for crypto trades
 
     # ── CANDLE SETTINGS ──────────────────────────────────────────────────────
     "CANDLE_TIMEFRAME":        "5m",
