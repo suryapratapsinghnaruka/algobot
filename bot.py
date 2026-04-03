@@ -93,37 +93,10 @@ class AlgoBot:
         log.info("=" * 65)
 
         log.info("Fetching full symbol lists from exchanges...")
-        CONFIG["STOCK_SYMBOLS"] = get_all_nse_symbols()
-
-        # When using CoinDCX live, fetch only symbols that actually exist on CoinDCX
-        # This prevents the ranker from scanning Binance-only symbols every cycle
-        crypto_broker_name = CONFIG.get("CRYPTO_BROKER", "paper").lower()
-        is_live = not CONFIG.get("PAPER_TRADING", True)
-        if crypto_broker_name == "coindcx" and is_live:
-            try:
-                import requests as _req
-                r    = _req.get("https://api.coindcx.com/exchange/ticker", timeout=10)
-                data = r.json()
-                blacklist = CONFIG.get("COINDCX_BLACKLIST", set())
-                min_price = CONFIG.get("MIN_COIN_PRICE_USD", 0.005)
-                coindcx_syms = [
-                    item["market"] for item in data
-                    if item.get("market", "").endswith("USDT")
-                    and float(item.get("last_price", 0)) >= min_price
-                    and item["market"] not in blacklist
-                ]
-                CONFIG["CRYPTO_SYMBOLS"] = coindcx_syms
-                log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
-                         f"{len(CONFIG['CRYPTO_SYMBOLS'])} CoinDCX pairs (blacklist filtered)")
-            except Exception as e:
-                log.warning(f"CoinDCX symbol fetch failed ({e}), falling back to Binance list")
-                CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
-                log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
-                         f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs")
-        else:
-            CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
-            log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
-                     f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs")
+        CONFIG["STOCK_SYMBOLS"]  = get_all_nse_symbols()
+        CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
+        log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
+                 f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs")
 
         self.risk    = RiskManager(CONFIG)
         self.engine  = StrategyEngine(CONFIG)
