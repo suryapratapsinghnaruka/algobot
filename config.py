@@ -129,17 +129,14 @@ CONFIG = {
     # ── COINDCX PAIR BLACKLIST ────────────────────────────────────────────────
     # Pairs that consistently get rejected (not listed, lot-size issues, etc.)
     # The bot will auto-add pairs at runtime too — add here to make permanent.
-    # All coins that return "Invalid request" on CoinDCX market orders
-    # Add any new ones here permanently to stop wasting scan cycles
     "COINDCX_BLACKLIST": {
-        # Confirmed Invalid request on CoinDCX
-        "HEMIUSDT", "BIOUSDT", "SKLUSDT", "AEVOUSDT", "IOTAUSDT",
-        "DYDXUSDT", "NKNUSDT", "WCTUSDT", "AUSDT", "DYMUSDT",
-        "CELRUSDT", "MAGICUSDT", "RSRUSDT", "JSTUSDT", "FOGOUSDT",
-        "TSTUSDT", "ROSEUSDT", "USTCUSDT", "MANTRAUSDT", "VICUSDT",
-        "GUNUSDT", "BANANAS31USDT",
-        # Micro-price coins (lot size too large for $15 capital)
-        "RVNUSDT", "PEPEUSDT", "SHIBUSDT", "FLOKIUSDT", "BONKUSDT",
+        "VICUSDT",        # not listed on CoinDCX
+        "RVNUSDT",        # lot size too small for $15 capital
+        "BANANAS31USDT",  # lot size / precision issue
+        "GUNUSDT",        # lot size / precision issue
+        "MAGICUSDT",      # auto-blacklisted: Invalid request
+        "RSRUSDT",        # auto-blacklisted: Invalid request (micro-price)
+        "PEPEUSDT",       # auto-blacklisted: Invalid request (micro-price, 3.6M qty)
     },
 
     # ── PRICE FLOOR ───────────────────────────────────────────────────────────
@@ -152,7 +149,7 @@ CONFIG = {
     # Set ANTHROPIC_API_KEY in your environment variables.
     # NOTE: auto-disables itself when ANTHROPIC_API_KEY is missing/expired
     # so the bot keeps trading on algo signals alone.
-    "AI_FILTER_ENABLED":  False,  # disabled — re-enable after fixing ATR issue
+    "AI_FILTER_ENABLED":  bool(os.environ.get("ANTHROPIC_API_KEY", "")),
     "AI_MIN_CONFIDENCE":  0.60,        # minimum Claude confidence to proceed
     "AI_MODEL":           "claude-haiku-4-5-20251001",  # fast + cheap
 
@@ -160,14 +157,14 @@ CONFIG = {
     # Fetches news headlines and scores them via Claude before trading.
     # Requires NEWS_API_KEY env var (free tier at newsapi.org).
     # Auto-disables when ANTHROPIC_API_KEY is missing.
-    "SENTIMENT_ENABLED":         False,
+    "SENTIMENT_ENABLED":         bool(os.environ.get("ANTHROPIC_API_KEY", "")),
     "SENTIMENT_VETO_THRESHOLD":  -0.5,   # veto trade if sentiment < -0.5 (bearish)
     "NEWS_API_KEY":              os.environ.get("NEWS_API_KEY", ""),
 
     # ── AI STRATEGY ADVISOR ───────────────────────────────────────────────────
     # Weekly analysis: feeds closed trades to Claude → generates new strategy ideas.
     # Auto-disables when ANTHROPIC_API_KEY is missing.
-    "AI_STRATEGY_ADVISOR_ENABLED": False,
+    "AI_STRATEGY_ADVISOR_ENABLED": bool(os.environ.get("ANTHROPIC_API_KEY", "")),
 
     # ── LIVE DASHBOARD ────────────────────────────────────────────────────────
     "DASHBOARD_ENABLED": True,
