@@ -74,9 +74,10 @@ CONFIG = {
     "PAPER_TRADING": False,
 
     # ── CAPITAL ──────────────────────────────────────────────────────────────
-    # CAPITAL: 15 USDT for crypto (you bought ₹1500 worth of USDT on CoinDCX)
-    # For NSE stocks, this is treated as INR when Angel One is connected.
-    "CAPITAL": 15,              # USDT for crypto trades
+    # For crypto (CoinDCX), CAPITAL is treated as USD (USDT).
+    # You have 15 USDT on CoinDCX — set CAPITAL to 15.
+    # For NSE stocks, CAPITAL is in INR (add separate INR funds when ready).
+    "CAPITAL": 15,              # USDT for crypto / INR for stocks
 
     # ── CANDLE SETTINGS ──────────────────────────────────────────────────────
     "CANDLE_TIMEFRAME":        "5m",
@@ -87,7 +88,7 @@ CONFIG = {
     "TAKE_PROFIT_PCT":     4.0,
     "MAX_DAILY_LOSS_PCT":  5.0,
     "MAX_DRAWDOWN_PCT":    10.0,
-    "MAX_POSITION_PCT":    80.0,  # 80% per trade = ₹1200 per position
+    "MAX_POSITION_PCT":    80.0,  # 80% per trade = $12 USDT per position (1 position at a time)
     "MAX_OPEN_TRADES":        1,   # kept for backward compat
     "MAX_OPEN_TRADES_STOCKS":  3,   # max simultaneous NSE positions
     "MAX_OPEN_TRADES_CRYPTO":  1,   # only 1 crypto trade at a time with $15 balance
@@ -128,14 +129,17 @@ CONFIG = {
     # ── COINDCX PAIR BLACKLIST ────────────────────────────────────────────────
     # Pairs that consistently get rejected (not listed, lot-size issues, etc.)
     # The bot will auto-add pairs at runtime too — add here to make permanent.
+    # All coins that return "Invalid request" on CoinDCX market orders
+    # Add any new ones here permanently to stop wasting scan cycles
     "COINDCX_BLACKLIST": {
-        "VICUSDT",        # not listed on CoinDCX
-        "RVNUSDT",        # lot size too small for $15 capital
-        "BANANAS31USDT",  # lot size / precision issue
-        "GUNUSDT",        # lot size / precision issue
-        "MAGICUSDT",      # auto-blacklisted: Invalid request
-        "RSRUSDT",        # auto-blacklisted: Invalid request (micro-price)
-        "PEPEUSDT",       # auto-blacklisted: Invalid request (micro-price, 3.6M qty)
+        # Confirmed Invalid request on CoinDCX
+        "HEMIUSDT", "BIOUSDT", "SKLUSDT", "AEVOUSDT", "IOTAUSDT",
+        "DYDXUSDT", "NKNUSDT", "WCTUSDT", "AUSDT", "DYMUSDT",
+        "CELRUSDT", "MAGICUSDT", "RSRUSDT", "JSTUSDT", "FOGOUSDT",
+        "TSTUSDT", "ROSEUSDT", "USTCUSDT", "MANTRAUSDT", "VICUSDT",
+        "GUNUSDT", "BANANAS31USDT",
+        # Micro-price coins (lot size too large for $15 capital)
+        "RVNUSDT", "PEPEUSDT", "SHIBUSDT", "FLOKIUSDT", "BONKUSDT",
     },
 
     # ── PRICE FLOOR ───────────────────────────────────────────────────────────
@@ -148,7 +152,7 @@ CONFIG = {
     # Set ANTHROPIC_API_KEY in your environment variables.
     # NOTE: auto-disables itself when ANTHROPIC_API_KEY is missing/expired
     # so the bot keeps trading on algo signals alone.
-    "AI_FILTER_ENABLED":  False,  # disabled — algo signals are sufficient at this capital level
+    "AI_FILTER_ENABLED":  False,  # disabled — re-enable after fixing ATR issue
     "AI_MIN_CONFIDENCE":  0.60,        # minimum Claude confidence to proceed
     "AI_MODEL":           "claude-haiku-4-5-20251001",  # fast + cheap
 
