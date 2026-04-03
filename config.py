@@ -112,11 +112,11 @@ CONFIG = {
     "ATR_TP_MULTIPLIER":  3.0,   # TP = entry ± 3.0 * ATR  (2:1 R:R)
 
     # ── SIGNAL QUALITY ───────────────────────────────────────────────────────
-    "MIN_SIGNAL_CONFIDENCE": 0.65,
+    "MIN_SIGNAL_CONFIDENCE": 0.60,
 
     # ── LIQUIDITY FILTER ─────────────────────────────────────────────────────
     "MIN_AVG_VOLUME_STOCKS": 500000,  # Higher filter — only liquid stocks affordable at ₹1500
-    "MIN_AVG_VOLUME_CRYPTO": 100000,
+    "MIN_AVG_VOLUME_CRYPTO": 50000,   # lowered — CoinDCX coins have less volume than Binance
 
     # ── PARALLEL PROCESSING ──────────────────────────────────────────────────
     "THREAD_WORKERS": 5,
@@ -130,23 +130,13 @@ CONFIG = {
     # Pairs that consistently get rejected (not listed, lot-size issues, etc.)
     # The bot will auto-add pairs at runtime too — add here to make permanent.
     "COINDCX_BLACKLIST": {
-        # Not listed on CoinDCX spot
-        "VICUSDT",
-        # Lot size too small for $15 capital
-        "RVNUSDT",
-        "BANANAS31USDT",
-        "GUNUSDT",
-        "PEPEUSDT",       # micro-price, 3.6M qty needed
-        "CELRUSDT",       # Invalid request on CoinDCX
-        "SHIBUSDT",       # micro-price
-        "FLOKIUSDT",      # micro-price
-        "BONKUSDT",       # micro-price
-        "DOGEUSDT",       # low price, lot size issues at $15 capital
-        # Invalid request errors
-        "MAGICUSDT",
-        "RSRUSDT",
-        "JSTUSDT",        # consistently invalid
-        "HBARUSDT",       # consistently invalid on CoinDCX
+        "VICUSDT",        # not listed on CoinDCX
+        "RVNUSDT",        # lot size too small for $15 capital
+        "BANANAS31USDT",  # lot size / precision issue
+        "GUNUSDT",        # lot size / precision issue
+        "MAGICUSDT",      # auto-blacklisted: Invalid request
+        "RSRUSDT",        # auto-blacklisted: Invalid request (micro-price)
+        "PEPEUSDT",       # auto-blacklisted: Invalid request (micro-price, 3.6M qty)
     },
 
     # ── PRICE FLOOR ───────────────────────────────────────────────────────────
@@ -159,9 +149,12 @@ CONFIG = {
     # Set ANTHROPIC_API_KEY in your environment variables.
     # NOTE: auto-disables itself when ANTHROPIC_API_KEY is missing/expired
     # so the bot keeps trading on algo signals alone.
-    "AI_FILTER_ENABLED":  bool(os.environ.get("ANTHROPIC_API_KEY", "")),
-    "AI_MIN_CONFIDENCE":  0.60,        # minimum Claude confidence to proceed
-    "AI_MODEL":           "claude-haiku-4-5-20251001",  # fast + cheap
+    # AI filter disabled — algo signals with 3+ strategies and 85%+ confidence
+    # are already high quality. Claude was vetoing 100% of trades due to ATR=0
+    # at low-volume hours. Re-enable once you have $100+ capital and want extra safety.
+    "AI_FILTER_ENABLED":  False,
+    "AI_MIN_CONFIDENCE":  0.60,
+    "AI_MODEL":           "claude-haiku-4-5-20251001",
 
     # ── SENTIMENT ANALYSIS ────────────────────────────────────────────────────
     # Fetches news headlines and scores them via Claude before trading.
