@@ -257,7 +257,7 @@ class CoinDCXBroker:
                 item["symbol"]
                 for item in data
                 if item.get("status") == "active"
-                and item.get("quote_currency_short_name") == "INR"
+                and item.get("target_currency_short_name") == "INR"
                 and "market_order" in item.get("order_types", [])
             }
             CoinDCXBroker._markets_cache["data"] = valid
@@ -292,15 +292,16 @@ class CoinDCXBroker:
     def get_candles(self, symbol, timeframe, limit=100):
         """
         Fetch OHLCV candles from CoinDCX.
-        Uses 5s timeout — illiquid/unsupported pairs fail fast and are skipped.
+        Uses 5s timeout — illiquid pairs fail fast and are skipped.
         """
         try:
             import requests
             base = symbol.replace("USDT", "")
+            pair = f"B-{base}_USDT"
             tf   = {"1m":"1m","5m":"5m","15m":"15m","1h":"1h"}.get(timeframe, "5m")
             r    = requests.get(
                 "https://public.coindcx.com/market_data/candles",
-                params={"pair": f"B-{base}_USDT", "interval": tf, "limit": limit},
+                params={"pair": pair, "interval": tf, "limit": limit},
                 timeout=5)
             data = r.json()
             if not data or not isinstance(data, list):
@@ -348,7 +349,14 @@ class CoinDCXBroker:
                 log.error(f"CoinDCX: cannot get USD price for {symbol} — order cancelled")
                 return None
 
-            # Use ticker price directly (INR pairs — ticker returns INR price)
+            # Sanity check: passed candle price vs ticker price
+            # CoinDCX candles are in INR — ticker is in USD
+            if price > 0 and abs(price - usd_price) / usd_price > 0.5:
+                log.warning(
+                    f"CoinDCX: price mismatch for {symbol} — "
+                    f"passed={price:.6f} ticker={usd_price:.6f} "
+                    f"(candle was likely INR). Using ticker price."
+                )
             price = usd_price
 
             # ── SPOT SELL GUARD ───────────────────────────────────────────────
@@ -370,12 +378,12 @@ class CoinDCXBroker:
                 # If we do own enough, sell only what we have (close position)
                 qty = min(qty, owned_qty)
 
-            # ── Minimum order value check (₹100 minimum on CoinDCX) ──────────
-            min_order_inr = 100.0
+            # ── Minimum order value check ($11 minimum on CoinDCX USDT) ─────
+            min_order_usd = 11.0
             order_value   = qty * usd_price
-            if order_value < min_order_inr:
+            if order_value < min_order_usd:
                 log.warning(
-                    f"CoinDCX: order value ₹{order_value:.2f} is below minimum ₹{min_order_inr} "
+                    f"CoinDCX: order value ${order_value:.2f} is below minimum ${min_order_usd} "
                     f"for {symbol} — order cancelled."
                 )
                 return None
@@ -392,7 +400,7 @@ class CoinDCXBroker:
 
             log.info(
                 f"CoinDCX placing order: {action} {qty_fmt} {symbol} "
-                f"@ ₹{usd_price:.4f} = ₹{qty_fmt * usd_price:.2f} INR"
+                f"@ ${usd_price:.6f} = ${qty_fmt * usd_price:.2f} USDT"
             )
             resp = self._signed_request("/exchange/v1/orders/create", {
                 "market":        symbol,
