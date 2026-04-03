@@ -74,10 +74,9 @@ CONFIG = {
     "PAPER_TRADING": False,
 
     # ── CAPITAL ──────────────────────────────────────────────────────────────
-    # For crypto (CoinDCX), CAPITAL is treated as USD (USDT).
-    # You have 15 USDT on CoinDCX — set CAPITAL to 15.
-    # For NSE stocks, CAPITAL is in INR (add separate INR funds when ready).
-    "CAPITAL": 15,              # USDT for crypto / INR for stocks
+    # CAPITAL is in INR for both stocks and CoinDCX INR pairs.
+    # CoinDCX INR wallet has ₹1500 deposited.
+    "CAPITAL": 1500,            # INR — used for both NSE stocks and CoinDCX INR pairs
 
     # ── CANDLE SETTINGS ──────────────────────────────────────────────────────
     "CANDLE_TIMEFRAME":        "5m",
@@ -88,7 +87,7 @@ CONFIG = {
     "TAKE_PROFIT_PCT":     4.0,
     "MAX_DAILY_LOSS_PCT":  5.0,
     "MAX_DRAWDOWN_PCT":    10.0,
-    "MAX_POSITION_PCT":    80.0,  # 80% per trade = $12 USDT per position (1 position at a time)
+    "MAX_POSITION_PCT":    80.0,  # 80% per trade = ₹1200 per position
     "MAX_OPEN_TRADES":        1,   # kept for backward compat
     "MAX_OPEN_TRADES_STOCKS":  3,   # max simultaneous NSE positions
     "MAX_OPEN_TRADES_CRYPTO":  1,   # only 1 crypto trade at a time with $15 balance
