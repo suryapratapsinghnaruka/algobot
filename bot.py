@@ -106,10 +106,11 @@ class AlgoBot:
                 data = r.json()
                 if not isinstance(data, list) or len(data) == 0:
                     raise ValueError(f"Unexpected format: {str(data)[:80]}")
+                # Use INR pairs — user's ₹1500 is in INR wallet not USDT wallet
                 market_order_syms = {
                     item["symbol"] for item in data
                     if isinstance(item, dict)
-                    and item.get("symbol", "").endswith("USDT")
+                    and item.get("symbol", "").endswith("INR")
                     and item.get("status") == "active"
                     and "market_order" in item.get("order_types", [])
                 }
@@ -119,9 +120,11 @@ class AlgoBot:
                             for x in ticker_r.json() if isinstance(x, dict)}
                 blacklist = CONFIG.get("COINDCX_BLACKLIST", set())
                 min_price = CONFIG.get("MIN_COIN_PRICE_USD", 0.005)
+                # For INR pairs, min_price in INR (₹0.5 minimum, not $0.005)
+                min_price_inr = 0.5
                 CONFIG["CRYPTO_SYMBOLS"] = sorted([
                     s for s in market_order_syms
-                    if s not in blacklist and ticker.get(s, 0) >= min_price
+                    if s not in blacklist and ticker.get(s, 0) >= min_price_inr
                 ])
                 log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
                          f"{len(CONFIG['CRYPTO_SYMBOLS'])} CoinDCX pairs (market orders only)")
