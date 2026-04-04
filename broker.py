@@ -355,24 +355,17 @@ class CoinDCXBroker:
                 qty = min(qty, owned_qty)
 
             # ── Get precision from market details ─────────────────────────────
-            info            = self._get_market_info(symbol)
-            # CoinDCX precision fields: base=what you buy, quote=what you pay
-            # Error messages say "XRP precision should be 4" → base_currency_precision
-            # Error messages say "USDT precision should be 1" → quote_currency_precision
-            price_precision = int(info.get("quote_currency_precision", 1))
-            qty_precision   = int(info.get("base_currency_precision", 4))
-            min_qty         = float(info.get("min_quantity", 0.1))
-            step            = float(info.get("step", 0.0001))
+            info        = self._get_market_info(symbol)
+            qty_precision = int(info.get("base_currency_precision", 4))
+            min_qty       = float(info.get("min_quantity", 0.1))
+            step          = float(info.get("step", 0.0001))
 
             # ── Calculate quantity ────────────────────────────────────────────
             capital        = self.cfg.get("CAPITAL", 15)
             pos_pct        = self.cfg.get("MAX_POSITION_PCT", 80) / 100
             order_value    = capital * pos_pct
             qty_calculated = order_value / price
-
-            # Round to exactly the required precision (e.g. 4 decimal places)
-            qty_rounded = round(max(qty_calculated, min_qty), qty_precision)
-            # Also ensure qty is a multiple of step size
+            qty_rounded    = round(max(qty_calculated, min_qty), qty_precision)
             if step > 0:
                 qty_rounded = round(round(qty_rounded / step) * step, qty_precision)
 
@@ -382,9 +375,23 @@ class CoinDCXBroker:
                 log.warning(f"CoinDCX: order value ${order_value_actual:.2f} below $11 minimum for {symbol}")
                 return None
 
-            # ── Price for limit order (slightly above ask to ensure fill) ─────
-            # Default price precision to 1 if not found (USDT pairs use 1 decimal)
-            limit_price = round(price * 1.005, price_precision)
+            # ── Price precision: derive from actual price value ───────────────
+            # Do NOT use quote_currency_precision from API — it rounds small
+            # prices like $0.0065 to $0.0 which CoinDCX rejects.
+            # Instead: count decimal places needed to show 4 significant figures.
+            def price_sig_figs(p, sig=6):
+                if p <= 0:
+                    return 8
+                import math
+                decimals = max(0, sig - int(math.floor(math.log10(abs(p)))) - 1)
+                return min(decimals, 8)
+
+            price_precision = price_sig_figs(price)
+            limit_price     = round(price * 1.005, price_precision)
+            # Ensure limit_price is not zero
+            if limit_price <= 0:
+                log.error(f"CoinDCX: computed limit_price=0 for {symbol} price={price} — skipping")
+                return None
 
             log.info(
                 f"CoinDCX placing LIMIT order: {action} {qty_rounded} {symbol} "
