@@ -7,7 +7,7 @@ Broker Integrations
 - ZerodhaBroker  : kept for compatibility
 
 Key fixes:
-- AngelOneBroker: _available set before _connect(), handles maintenance window
+- AngelOneBroker: _available set before _connect(), handles maintenance window 
 - CoinDCXBroker: _get_current_price uses fresh candle data (not unreliable ticker)
 - CoinDCXBroker: candle timeout 5s (fast-fail on illiquid pairs)
 - CoinDCXBroker: timeout errors demoted to debug level
