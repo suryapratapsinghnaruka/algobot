@@ -390,18 +390,45 @@ class CoinDCXBroker:
                 f"@ ${limit_price} = ${qty_rounded * limit_price:.2f} USDT"
             )
 
-            resp = self._signed_request("/exchange/v1/orders/create", {
-                "market":         symbol,
-                "side":           "buy" if action == "BUY" else "sell",
-                "order_type":     "limit_order",
-                "total_quantity": qty_rounded,
-                "price_per_unit": limit_price,
-            })
+            # ── Place order with auto-retry on precision errors ───────────────
+            import re
+            for attempt in range(3):
+                order_body = {
+                    "market":         symbol,
+                    "side":           "buy" if action == "BUY" else "sell",
+                    "order_type":     "limit_order",
+                    "total_quantity": qty_rounded,
+                    "price_per_unit": limit_price,
+                }
+                resp = self._signed_request("/exchange/v1/orders/create", order_body)
+
+                if not (isinstance(resp, dict) and resp.get("code") and resp["code"] != 200):
+                    break  # success or non-error response
+
+                msg = resp.get("message", "")
+
+                # Auto-fix: "USDT precision should be N" or "XRP precision should be N"
+                prec_match = re.search("precision should be (\\d+)", msg)
+                if prec_match:
+                    required_prec = int(prec_match.group(1))
+                    if "USDT precision" in msg:
+                        # Price precision error
+                        limit_price = round(price * 1.005, required_prec)
+                        log.warning(f"CoinDCX: adjusting price precision to {required_prec} → {limit_price}")
+                    else:
+                        # Quantity precision error
+                        qty_rounded = round(qty_rounded, required_prec)
+                        log.warning(f"CoinDCX: adjusting qty precision to {required_prec} → {qty_rounded}")
+                    continue  # retry with corrected values
+
+                # Non-recoverable errors
+                log.error(f"CoinDCX order rejected: {resp}")
+                if msg == "Invalid request":
+                    self._auto_blacklist(symbol)
+                return None
 
             if isinstance(resp, dict) and resp.get("code") and resp["code"] != 200:
-                log.error(f"CoinDCX order rejected: {resp}")
-                if resp.get("message") == "Invalid request":
-                    self._auto_blacklist(symbol)
+                log.error(f"CoinDCX order rejected after retries: {resp}")
                 return None
 
             sl, tp = _calc_sl_tp(price, action, stop_loss_pct, take_profit_pct, atr, self.cfg)
