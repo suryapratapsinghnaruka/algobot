@@ -95,8 +95,8 @@ class AlgoBot:
         log.info("Fetching full symbol lists from exchanges...")
         CONFIG["STOCK_SYMBOLS"] = get_all_nse_symbols()
 
-        crypto_broker_name = CONFIG.get("CRYPTO_BROKER", "paper").lower()
-        if crypto_broker_name == "delta":
+        _crypto_broker = CONFIG.get("CRYPTO_BROKER", "paper").lower()
+        if _crypto_broker == "delta":
             try:
                 import requests as _req
                 r = _req.get("https://api.india.delta.exchange/v2/products",
@@ -111,6 +111,8 @@ class AlgoBot:
             except Exception as e:
                 log.warning(f"Delta symbol fetch failed ({e}) — using Binance fallback")
                 CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
+                log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
+                         f"{len(CONFIG['CRYPTO_SYMBOLS'])} Binance pairs (fallback)")
         else:
             CONFIG["CRYPTO_SYMBOLS"] = get_all_binance_symbols()
             log.info(f"Universe: {len(CONFIG['STOCK_SYMBOLS'])} NSE stocks + "
@@ -165,6 +167,13 @@ class AlgoBot:
                 crypto_broker = BinanceBroker(CONFIG)
             elif crypto_broker_name == "coindcx":
                 crypto_broker = CoinDCXBroker(CONFIG)
+            elif crypto_broker_name == "delta":
+                try:
+                    from broker import DeltaBroker
+                    crypto_broker = DeltaBroker(CONFIG)
+                except Exception as e:
+                    log.warning(f"Delta Exchange init failed ({e}) — using paper trader for crypto.")
+                    crypto_broker = PaperTrader("crypto", CONFIG)
             else:
                 # No crypto API — paper trade crypto with real prices
                 log.info("No crypto broker configured — using paper trader for crypto.")
