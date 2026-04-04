@@ -375,22 +375,14 @@ class CoinDCXBroker:
                 log.warning(f"CoinDCX: order value ${order_value_actual:.2f} below $11 minimum for {symbol}")
                 return None
 
-            # ── Price precision: derive from actual price value ───────────────
-            # Do NOT use quote_currency_precision from API — it rounds small
-            # prices like $0.0065 to $0.0 which CoinDCX rejects.
-            # Instead: count decimal places needed to show 4 significant figures.
-            def price_sig_figs(p, sig=6):
-                if p <= 0:
-                    return 8
-                import math
-                decimals = max(0, sig - int(math.floor(math.log10(abs(p)))) - 1)
-                return min(decimals, 8)
+            # ── Price precision: use quote_currency_precision from API ──────────
+            # CoinDCX error messages say "USDT precision should be N"
+            # This N comes from quote_currency_precision in markets_details
+            price_precision = int(info.get("quote_currency_precision", 6))
 
-            price_precision = price_sig_figs(price)
-            limit_price     = round(price * 1.005, price_precision)
-            # Ensure limit_price is not zero
+            limit_price = round(price * 1.005, price_precision)
             if limit_price <= 0:
-                log.error(f"CoinDCX: computed limit_price=0 for {symbol} price={price} — skipping")
+                log.error(f"CoinDCX: limit_price=0 for {symbol} — skipping")
                 return None
 
             log.info(
