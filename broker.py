@@ -811,9 +811,20 @@ class DeltaBroker:
             # Round limit price to tick_size
             import math
             def round_to_tick(p, tick):
-                return round(round(p / tick) * tick, len(str(tick).rstrip("0").split(".")[-1]) if "." in str(tick) else 0)
+                if tick <= 0:
+                    return p
+                rounded = round(p / tick) * tick
+                # Determine decimal places from tick size
+                if tick >= 1:
+                    decimals = 0
+                else:
+                    decimals = len(str(tick).rstrip("0").split(".")[-1])
+                return round(rounded, decimals)
 
-            limit_price = round_to_tick(mark_price * (1.001 if action=="BUY" else 0.999), tick_size)
+            raw_price   = mark_price * (1.001 if action == "BUY" else 0.999)
+            limit_price = round_to_tick(raw_price, tick_size)
+            if limit_price <= 0:
+                limit_price = raw_price  # fallback: use raw price as string
 
             log.info(f"Delta placing order: {action} {num_contracts} contracts {symbol} "
                      f"@ ${limit_price} (mark=${mark_price:.2f}) = ~${num_contracts*contract_usd:.2f}")
@@ -868,11 +879,20 @@ class DeltaBroker:
 
             import math
             def round_to_tick(p, tick):
-                return round(round(p / tick) * tick, len(str(tick).rstrip("0").split(".")[-1]) if "." in str(tick) else 0)
+                if tick <= 0:
+                    return p
+                rounded = round(p / tick) * tick
+                if tick >= 1:
+                    decimals = 0
+                else:
+                    decimals = len(str(tick).rstrip("0").split(".")[-1])
+                return round(rounded, decimals)
 
             close_price = round_to_tick(
                 ltp * (0.999 if position["action"]=="BUY" else 1.001), tick_size
             )
+            if close_price <= 0:
+                close_price = ltp
             close_side = "sell" if position["action"] == "BUY" else "buy"
 
             resp = self._post("/v2/orders", {
