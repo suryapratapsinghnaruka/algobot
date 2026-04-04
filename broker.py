@@ -356,16 +356,25 @@ class CoinDCXBroker:
 
             # ── Get precision from market details ─────────────────────────────
             info            = self._get_market_info(symbol)
-            price_precision = int(info.get("quote_currency_precision", 4))
+            # CoinDCX precision fields: base=what you buy, quote=what you pay
+            # Error messages say "XRP precision should be 4" → base_currency_precision
+            # Error messages say "USDT precision should be 1" → quote_currency_precision
+            price_precision = int(info.get("quote_currency_precision", 1))
             qty_precision   = int(info.get("base_currency_precision", 4))
             min_qty         = float(info.get("min_quantity", 0.1))
+            step            = float(info.get("step", 0.0001))
 
             # ── Calculate quantity ────────────────────────────────────────────
             capital        = self.cfg.get("CAPITAL", 15)
             pos_pct        = self.cfg.get("MAX_POSITION_PCT", 80) / 100
             order_value    = capital * pos_pct
             qty_calculated = order_value / price
-            qty_rounded    = round(max(qty_calculated, min_qty), qty_precision)
+
+            # Round to exactly the required precision (e.g. 4 decimal places)
+            qty_rounded = round(max(qty_calculated, min_qty), qty_precision)
+            # Also ensure qty is a multiple of step size
+            if step > 0:
+                qty_rounded = round(round(qty_rounded / step) * step, qty_precision)
 
             # ── Minimum order value check ($11 minimum) ───────────────────────
             order_value_actual = qty_rounded * price
@@ -374,7 +383,8 @@ class CoinDCXBroker:
                 return None
 
             # ── Price for limit order (slightly above ask to ensure fill) ─────
-            limit_price = round(price * 1.005, price_precision)   # 0.5% above market
+            # Default price precision to 1 if not found (USDT pairs use 1 decimal)
+            limit_price = round(price * 1.005, price_precision)
 
             log.info(
                 f"CoinDCX placing LIMIT order: {action} {qty_rounded} {symbol} "
