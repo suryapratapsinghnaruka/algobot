@@ -129,26 +129,21 @@ CONFIG = {
     # ── COINDCX PAIR BLACKLIST ────────────────────────────────────────────────
     # Pairs that consistently get rejected (not listed, lot-size issues, etc.)
     # The bot will auto-add pairs at runtime too — add here to make permanent.
-    # All coins confirmed to reject market orders on CoinDCX — permanent blacklist
     "COINDCX_BLACKLIST": {
-        "FOGOUSDT","BIOUSDT","SKLUSDT","AEVOUSDT","IOTAUSDT",
-        "HEMIUSDT","DYDXUSDT","NKNUSDT","WCTUSDT","AUSDT",
-        "DYMUSDT","CELRUSDT","MAGICUSDT","RSRUSDT","JSTUSDT",
-        "TSTUSDT","ROSEUSDT","USTCUSDT","MANTRAUSDT","VICUSDT",
-        "GUNUSDT","BANANAS31USDT","C98USDT","WIFUSDT","1INCHUSDT",
-        "HIFIUSDT","BBUSDT","LUNAUSDT","RVNUSDT","PEPEUSDT",
-        "SHIBUSDT","FLOKIUSDT","BONKUSDT",
+        # Confirmed Invalid request — do not retry these
+        "XRPUSDT", "VICUSDT", "GUNUSDT", "BANANAS31USDT",
+        "MAGICUSDT", "RSRUSDT", "JSTUSDT", "FOGOUSDT",
+        "BIOUSDT", "SKLUSDT", "AEVOUSDT", "IOTAUSDT",
+        "HEMIUSDT", "DYDXUSDT", "NKNUSDT", "WCTUSDT",
+        "AUSDT", "DYMUSDT", "CELRUSDT", "TSTUSDT",
+        "ROSEUSDT", "USTCUSDT", "MANTRAUSDT", "C98USDT",
+        "WIFUSDT", "1INCHUSDT", "HIFIUSDT", "BBUSDT",
+        "LUNAUSDT", "RVNUSDT", "PEPEUSDT", "SHIBUSDT",
+        "FLOKIUSDT", "BONKUSDT",
     },
-
-    # Only scan these verified coins — all confirmed to work on CoinDCX with market orders
-    "COINDCX_VERIFIED_ONLY": True,
-    "COINDCX_VERIFIED_SYMBOLS": [
-        "BTCUSDT","ETHUSDT","XRPUSDT","BNBUSDT","SOLUSDT",
-        "ADAUSDT","LTCUSDT","LINKUSDT","DOTUSDT","AVAXUSDT",
-        "MATICUSDT","UNIUSDT","ATOMUSDT","XLMUSDT","TRXUSDT",
-        "NEARUSDT","ALGOUSDT","SANDUSDT","APTUSDT","ARBUSDT",
-        "OPUSDT","INJUSDT","SUIUSDT","STXUSDT","RUNEUSDT",
-    ],
+    "AI_FILTER_ENABLED": False,
+    "SENTIMENT_ENABLED": False,
+    "AI_STRATEGY_ADVISOR_ENABLED": False,
 
     # ── PRICE FLOOR ───────────────────────────────────────────────────────────
     # Skip coins below this USD price. At $15 capital, sub-cent coins need
