@@ -378,7 +378,8 @@ class CoinDCXBroker:
             # ── Price precision: use quote_currency_precision from API ──────────
             # CoinDCX error messages say "USDT precision should be N"
             # This N comes from quote_currency_precision in markets_details
-            price_precision = int(info.get("quote_currency_precision", 6))
+            # CoinDCX uses target_currency_precision for price (not quote_currency_precision)
+            price_precision = int(info.get("target_currency_precision") or info.get("quote_currency_precision") or 4)
 
             limit_price = round(price * 1.005, price_precision)
             if limit_price <= 0:
