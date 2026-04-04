@@ -77,7 +77,7 @@ CONFIG = {
     # For crypto (CoinDCX), CAPITAL is treated as USD (USDT).
     # You have 15 USDT on CoinDCX — set CAPITAL to 15.
     # For NSE stocks, CAPITAL is in INR (add separate INR funds when ready).
-    "CAPITAL": 15,              # USDT for crypto / INR for stocks
+    "CAPITAL": 15,              # USD for Delta Exchange crypto trading
 
     # ── CANDLE SETTINGS ──────────────────────────────────────────────────────
     "CANDLE_TIMEFRAME":        "5m",
@@ -129,21 +129,7 @@ CONFIG = {
     # ── COINDCX PAIR BLACKLIST ────────────────────────────────────────────────
     # Pairs that consistently get rejected (not listed, lot-size issues, etc.)
     # The bot will auto-add pairs at runtime too — add here to make permanent.
-    "COINDCX_BLACKLIST": {
-        # Confirmed Invalid request — do not retry these
-        "XRPUSDT", "VICUSDT", "GUNUSDT", "BANANAS31USDT",
-        "MAGICUSDT", "RSRUSDT", "JSTUSDT", "FOGOUSDT",
-        "BIOUSDT", "SKLUSDT", "AEVOUSDT", "IOTAUSDT",
-        "HEMIUSDT", "DYDXUSDT", "NKNUSDT", "WCTUSDT",
-        "AUSDT", "DYMUSDT", "CELRUSDT", "TSTUSDT",
-        "ROSEUSDT", "USTCUSDT", "MANTRAUSDT", "C98USDT",
-        "WIFUSDT", "1INCHUSDT", "HIFIUSDT", "BBUSDT",
-        "LUNAUSDT", "RVNUSDT", "PEPEUSDT", "SHIBUSDT",
-        "FLOKIUSDT", "BONKUSDT",
-    },
-    "AI_FILTER_ENABLED": False,
-    "SENTIMENT_ENABLED": False,
-    "AI_STRATEGY_ADVISOR_ENABLED": False,
+    "COINDCX_BLACKLIST": set(),  # not used with Delta Exchange
 
     # ── PRICE FLOOR ───────────────────────────────────────────────────────────
     # Skip coins below this USD price. At $15 capital, sub-cent coins need
@@ -234,7 +220,7 @@ CONFIG = {
     # Stock broker: "angelone" (default, free) or "zerodha"
     # Crypto broker: "coindcx" (Indian) or "binance" or "paper" (no real crypto)
     "STOCK_BROKER":  "angelone",
-    "CRYPTO_BROKER": "coindcx",      # Change to "coindcx" or "binance" when ready
+    "CRYPTO_BROKER": "delta",         # Delta Exchange India — working!
 
     # ── ANGEL ONE API (Indian Stocks) ─────────────────────────────────────────
     # Get from: myapi.angelbroking.com
@@ -248,6 +234,10 @@ CONFIG = {
     # Get from: coindcx.com → Settings → API Keys (free)
     "COINDCX_API_KEY":    os.environ.get("COINDCX_API_KEY", ""),
     "COINDCX_API_SECRET": os.environ.get("COINDCX_API_SECRET", ""),
+
+    # ── DELTA EXCHANGE API (India) ────────────────────────────────────────────
+    "DELTA_API_KEY":    os.environ.get("DELTA_API_KEY", ""),
+    "DELTA_API_SECRET": os.environ.get("DELTA_API_SECRET", ""),
 
     # ── BINANCE API (Crypto — if you have an account) ─────────────────────────
     "BINANCE_API_KEY":    os.environ.get("BINANCE_API_KEY", ""),
